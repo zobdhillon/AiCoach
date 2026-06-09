@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Scenario;
+use Inertia\Inertia;
 // use Illuminate\Http\Request;
 
 class ScenarioController extends Controller
@@ -11,6 +12,8 @@ class ScenarioController extends Controller
     {
         $scenarios = Scenario::all();
 
-        return response()->json($scenarios);
+        return Inertia::render('Scenarios/Index', [
+            'scenarios' => $scenarios
+        ]);
     }
 }

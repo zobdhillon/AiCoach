@@ -13,16 +13,14 @@ return new class extends Migration
     {
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
             $table->foreignId('scenario_id')
                 ->constrained()
                 ->cascadeOnDelete();
-
             $table->json('scores')->nullable();
-
-            $table->string('status')
-                ->default('active');
-
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

@@ -1,17 +1,13 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DeleteUserForm from './Partials/DeleteUserForm.vue';
-import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
-import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
-import { Head } from '@inertiajs/vue3';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import DeleteUserForm from "./Partials/DeleteUserForm.vue";
+import UpdatePasswordForm from "./Partials/UpdatePasswordForm.vue";
+import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm.vue";
+import { Head } from "@inertiajs/vue3";
 
 defineProps({
-    mustVerifyEmail: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
+    mustVerifyEmail: { type: Boolean },
+    status: { type: String },
 });
 </script>
 
@@ -19,37 +15,38 @@ defineProps({
     <Head title="Profile" />
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Profile
-            </h2>
-        </template>
+        <template #title>Profile</template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
+        <div class="mx-auto max-w-2xl space-y-5">
+            <!-- Page heading -->
+            <div class="mb-6">
+                <h1
+                    class="text-xl font-extrabold tracking-tight"
+                    style="color: var(--text)"
                 >
-                    <UpdateProfileInformationForm
-                        :must-verify-email="mustVerifyEmail"
-                        :status="status"
-                        class="max-w-xl"
-                    />
-                </div>
+                    Your Profile
+                </h1>
+                <p class="mt-1 text-xs" style="color: var(--text-2)">
+                    Manage your account details and security settings.
+                </p>
+            </div>
 
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <UpdatePasswordForm class="max-w-xl" />
-                </div>
+            <!-- Profile information -->
+            <div class="card p-6">
+                <UpdateProfileInformationForm
+                    :must-verify-email="mustVerifyEmail"
+                    :status="status"
+                />
+            </div>
 
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <DeleteUserForm class="max-w-xl" />
-                </div>
+            <!-- Password -->
+            <div class="card p-6">
+                <UpdatePasswordForm />
+            </div>
+
+            <!-- Delete account -->
+            <div class="card p-6">
+                <DeleteUserForm />
             </div>
         </div>
     </AuthenticatedLayout>

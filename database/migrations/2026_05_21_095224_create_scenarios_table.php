@@ -16,6 +16,16 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->longText('system_prompt');
+            $table->string('user_role')->nullable();
+            $table->string('ai_role')->nullable();
+            $table->json('objectives')->nullable();
+            $table->string('category')->default('General');
+            $table->enum('difficulty', ['Beginner', 'Intermediate', 'Advanced'])->default('Intermediate');
+            $table->integer('estimated_duration')->default(15);
+            $table->string('icon')->default('message');
+            $table->string('color')->default('purple');
+            $table->boolean('is_active')->default(true);
+            $table->integer('order')->default(0);
             $table->timestamps();
         });
     }

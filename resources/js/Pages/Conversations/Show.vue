@@ -18,10 +18,32 @@ const lastAttemptedMessage = ref("");
 
 const isCompleted = ref(props.conversation.status === "completed");
 const scores = ref(props.conversation.scores);
+const animatedScores = ref({});
+
+const parseSegments = (text) => {
+    const parts = text.split(/(\*\*.+?\*\*)/g);
+    return parts.map((part) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+            return { bold: true, text: part.slice(2, -2) };
+        }
+        return { bold: false, text: part };
+    });
+};
 
 const userMessageCount = computed(
     () => localMessages.value.filter((m) => m.role === "user").length,
 );
+
+// Animate score bars whenever scores become available/change
+const animateScores = (val) => {
+    if (!val) return;
+    animatedScores.value = {};
+    nextTick(() => {
+        setTimeout(() => {
+            animatedScores.value = { ...val };
+        }, 300);
+    });
+};
 
 watch(
     () => props.conversation.status,
@@ -36,6 +58,11 @@ watch(
         scores.value = val;
     },
 );
+
+watch(scores, (val) => {
+    animateScores(val);
+});
+
 const showEndConfirm = ref(false);
 
 const endSession = () => {
@@ -49,7 +76,6 @@ let recognition = null;
 let savedText = "";
 
 const toggleVoice = () => {
-    // Check browser support
     if (
         !("webkitSpeechRecognition" in window) &&
         !("SpeechRecognition" in window)
@@ -108,7 +134,6 @@ watch(
     { deep: true },
 );
 
-// Scroll to bottom whenever a new message appears
 watch(
     () => localMessages.value.length,
     async () => {
@@ -126,10 +151,16 @@ watch(processing, async (isProcessing) => {
 
 function scrollToBottom() {
     const el = messagesEl.value;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+    });
 }
 
-onMounted(() => nextTick(scrollToBottom));
+onMounted(() => {
+    nextTick(scrollToBottom);
+    animateScores(scores.value);
+});
 
 const isUser = (role) => role === "user";
 
@@ -140,7 +171,6 @@ const sendMessage = () => {
     const payload = messageText.value;
     lastAttemptedMessage.value = payload;
 
-    // Optimistically push the user message immediately
     const tempMsg = {
         id: Date.now(),
         role: "user",
@@ -239,7 +269,9 @@ const copyMessage = async (msg) => {
                         backdrop-filter: blur(20px);
                     "
                 >
-                    <div class="flex items-start justify-between gap-4">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4"
+                    >
                         <div>
                             <p
                                 class="mb-1 text-[11px] font-bold uppercase tracking-widest"
@@ -376,11 +408,13 @@ const copyMessage = async (msg) => {
                                     style="background: var(--accent-bg)"
                                 >
                                     <div
-                                        class="h-2 rounded-full transition-all duration-700"
+                                        class="h-2 rounded-full transition-all duration-1000"
                                         :style="{
-                                            width: scores[key] + '%',
+                                            width:
+                                                (animatedScores[key] ?? 0) +
+                                                '%',
                                             background:
-                                                'linear-gradient(90deg, #7c3aed, #a855f7)',
+                                                'var(--gradient-primary)',
                                         }"
                                     />
                                 </div>
@@ -393,7 +427,7 @@ const copyMessage = async (msg) => {
                         class="card p-5 mb-6"
                         style="
                             background: var(--accent-bg);
-                            border-color: rgba(124, 58, 237, 0.2);
+                            border-color: var(--accent);
                         "
                     >
                         <h3
@@ -465,7 +499,7 @@ const copyMessage = async (msg) => {
                         class="rounded-xl border p-4 text-xs leading-relaxed"
                         style="
                             background: var(--accent-bg);
-                            border-color: rgba(124, 58, 237, 0.2);
+                            border-color: var(--accent);
                             color: var(--text-2);
                         "
                     >
@@ -504,9 +538,9 @@ const copyMessage = async (msg) => {
                             <div
                                 class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border text-[10px] font-bold"
                                 style="
-                                    background: rgba(124, 58, 237, 0.15);
+                                    background: var(--accent-bg);
                                     color: var(--accent);
-                                    border-color: rgba(124, 58, 237, 0.2);
+                                    border-color: var(--accent);
                                     opacity: 0.5;
                                 "
                                 aria-hidden="true"
@@ -555,9 +589,9 @@ const copyMessage = async (msg) => {
                                 v-if="!isUser(msg.role)"
                                 class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border text-[10px] font-bold"
                                 style="
-                                    background: rgba(124, 58, 237, 0.15);
+                                    background: var(--accent-bg);
                                     color: var(--accent);
-                                    border-color: rgba(124, 58, 237, 0.2);
+                                    border-color: var(--accent);
                                 "
                                 aria-hidden="true"
                             >
@@ -577,11 +611,23 @@ const copyMessage = async (msg) => {
                                     "
                                     :style="
                                         isUser(msg.role)
-                                            ? 'background: linear-gradient(135deg,#7c3aed,#a855f7); color: white; box-shadow: 0 4px 16px rgba(124,58,237,0.35);'
-                                            : 'background: var(--msg-ai-bg, rgba(255,255,255,0.8)); color: var(--msg-ai-text, var(--text)); border-color: var(--border); box-shadow: var(--shadow-sm);'
+                                            ? 'background: var(--gradient-primary); color: white; box-shadow: var(--shadow-btn);'
+                                            : 'background: var(--bg-surface2); color: var(--text); border-color: var(--border-strong);'
                                     "
                                 >
-                                    {{ msg.content }}
+                                    <span
+                                        v-for="(seg, i) in parseSegments(
+                                            msg.content,
+                                        )"
+                                        :key="i"
+                                    >
+                                        <strong v-if="seg.bold">{{
+                                            seg.text
+                                        }}</strong>
+                                        <template v-else>{{
+                                            seg.text
+                                        }}</template>
+                                    </span>
                                 </div>
 
                                 <!-- copy button — appears on group hover -->
@@ -651,9 +697,9 @@ const copyMessage = async (msg) => {
                         <div
                             class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border text-[10px] font-bold"
                             style="
-                                background: rgba(124, 58, 237, 0.15);
+                                background: var(--accent-bg);
                                 color: var(--accent);
-                                border-color: rgba(124, 58, 237, 0.2);
+                                border-color: var(--accent);
                             "
                             aria-hidden="true"
                         >
@@ -671,15 +717,15 @@ const copyMessage = async (msg) => {
                         >
                             <span
                                 class="typing-dot h-[7px] w-[7px] rounded-full"
-                                style="background: rgba(124, 58, 237, 0.4)"
+                                style="background: var(--accent)"
                             />
                             <span
                                 class="typing-dot h-[7px] w-[7px] rounded-full"
-                                style="background: rgba(124, 58, 237, 0.4)"
+                                style="background: var(--accent)"
                             />
                             <span
                                 class="typing-dot h-[7px] w-[7px] rounded-full"
-                                style="background: rgba(124, 58, 237, 0.4)"
+                                style="background: var(--accent)"
                             />
                         </div>
                     </div>
@@ -688,7 +734,7 @@ const copyMessage = async (msg) => {
                 <!-- Footer — hidden when completed -->
                 <footer
                     v-if="!isCompleted"
-                    class="flex-shrink-0 border-t px-5 py-3"
+                    class="flex-shrink-0 border-t px-3 sm:px-5 py-3"
                     style="
                         background: var(--bg-surface);
                         border-color: var(--border-strong);
@@ -768,10 +814,10 @@ const copyMessage = async (msg) => {
                     </div>
 
                     <form
-                        class="chat-form flex items-center gap-2 rounded-full border px-[18px] py-[6px] pr-[6px] backdrop-blur"
+                        class="chat-form flex items-center gap-1.5 sm:gap-2 rounded-full border px-3 sm:px-[18px] py-[6px] pr-2 backdrop-blur"
                         style="
                             background: var(--bg-surface2);
-                            border-color: rgba(167, 139, 250, 0.25);
+                            border-color: var(--border-strong);
                             box-shadow: var(--shadow-sm);
                         "
                         @submit.prevent="sendMessage"
@@ -803,7 +849,7 @@ const copyMessage = async (msg) => {
                         <button
                             type="button"
                             @click="toggleVoice"
-                            class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all duration-200"
+                            class="flex h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all duration-200"
                             :style="
                                 isListening
                                     ? 'background: linear-gradient(135deg,#dc2626,#ef4444); box-shadow: 0 4px 12px rgba(220,38,38,0.4);'
@@ -843,7 +889,7 @@ const copyMessage = async (msg) => {
 
                         <!-- Message counter -->
                         <span
-                            class="text-[10px] font-semibold flex-shrink-0 px-2"
+                            class="text-[9px] sm:text-[10px] font-semibold flex-shrink-0 px-1"
                             :style="{
                                 color:
                                     userMessageCount >= 10
@@ -863,7 +909,8 @@ const copyMessage = async (msg) => {
                             aria-label="Sending..."
                         >
                             <svg
-                                class="animate-spin h-5 w-5 text-purple-600"
+                                class="animate-spin h-5 w-5"
+                                style="color: var(--accent)"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
@@ -887,13 +934,9 @@ const copyMessage = async (msg) => {
                         <!-- Send button -->
                         <button
                             type="submit"
-                            class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all duration-200"
+                            class="flex h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center rounded-full border-0 transition-all duration-200"
                             style="
-                                background: linear-gradient(
-                                    135deg,
-                                    #7c3aed,
-                                    #a855f7
-                                );
+                                background: var(--gradient-primary);
                                 box-shadow: var(--shadow-btn);
                             "
                             :disabled="
@@ -975,7 +1018,7 @@ const copyMessage = async (msg) => {
 
 <style scoped>
 .chat-form:focus-within {
-    border-color: rgba(124, 58, 237, 0.45) !important;
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-bg) !important;
 }
 </style>

@@ -1,9 +1,14 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
+import { useTheme } from "@/composables/useTheme";
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+
+const isFullHeightPage = computed(() => {
+    return ["Dashboard", "Conversations/Show"].includes(page.component);
+});
 
 // ── Sidebar state ─────────────────────────────────────────
 const collapsed = ref(false);
@@ -36,19 +41,15 @@ let closeTimeout = null;
 
 const handleMobileNavClick = (href, e) => {
     if (!isMobile.value || collapsed.value) {
-        // Desktop or sidebar already closed – navigate immediately
         return true;
     }
 
-    e.preventDefault(); // Stop Inertia from navigating right away
+    e.preventDefault(); 
 
-    // Close the sidebar
     collapsed.value = true;
 
-    // Clear any previous timeout
     if (closeTimeout) clearTimeout(closeTimeout);
 
-    // Wait for the sidebar collapse animation (matches duration-300 in CSS)
     closeTimeout = setTimeout(() => {
         router.visit(href);
         closeTimeout = null;
@@ -66,7 +67,6 @@ const handleMobileLogout = async (e) => {
 
     e.preventDefault();
 
-    // Close the sidebar
     collapsed.value = true;
 
     if (closeTimeout) clearTimeout(closeTimeout);
@@ -77,21 +77,10 @@ const handleMobileLogout = async (e) => {
 };
 
 // ── Theme ─────────────────────────────────────────────────
-const isDark = ref(false);
-const applyTheme = (dark) => {
-    document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("theme", dark ? "dark" : "light");
-    isDark.value = dark;
-};
-const toggleDark = () => applyTheme(!isDark.value);
+const { toggleDark } = useTheme();
 
 // ── Lifecycle ─────────────────────────────────────────────
 onMounted(() => {
-    const saved = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-    ).matches;
-    applyTheme(saved ? saved === "dark" : prefersDark);
     syncViewport();
     window.addEventListener("resize", syncViewport);
 });
@@ -424,7 +413,7 @@ const logout = () => router.post(route("logout"));
 
             <!-- MAIN COLUMN -->
             <div
-                class="flex min-w-0 flex-1 flex-col overflow-hidden max-w-[1440px] mx-auto"
+                class="flex min-w-0 flex-1 flex-col overflow-hidden"
                 style="background: var(--bg-surface)"
             >
                 <!-- Topbar -->
@@ -557,13 +546,16 @@ const logout = () => router.post(route("logout"));
                 </header>
 
                 <!-- Page content -->
-                <main class="flex min-h-0 flex-1 flex-col overflow-hidden">
-                    <div
-                        class="min-h-0 flex-1 overflow-y-auto"
-                        style="background: var(--bg)"
-                    >
+                <main class="flex-1 overflow-hidden min-h-0">
+                    <div class="h-full" style="background: var(--bg)">
                         <Transition name="v" mode="out-in">
-                            <div :key="$page.url" class="min-h-full">
+                            <div
+                                :key="$page.url"
+                                :class="[
+                                    'h-full',
+                                    isFullHeightPage ? '' : 'overflow-y-auto',
+                                ]"
+                            >
                                 <slot />
                             </div>
                         </Transition>

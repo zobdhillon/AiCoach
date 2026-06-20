@@ -36,6 +36,14 @@ const greeting = computed(() => {
     return "Good evening";
 });
 
+const averageSkillScore = computed(() => {
+    const values = skillsWithMeta.value
+        .filter((s) => !s.isPending)
+        .map((s) => s.value);
+    if (values.length === 0) return 0;
+    return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+});
+
 const userName = computed(() => {
     const name = props.stats.userName ?? "there";
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
@@ -48,14 +56,6 @@ function formatDate(d) {
     if (diff === 1) return "Yesterday";
     if (diff < 7) return `${diff}d ago`;
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function scoreColor(score) {
-    if (score === null || score === undefined)
-        return { text: "var(--text-3)", bg: "var(--border)" };
-    if (score >= 80) return { text: "var(--green)", bg: "var(--green-bg)" };
-    if (score >= 60) return { text: "var(--amber)", bg: "var(--amber-bg)" };
-    return { text: "var(--red)", bg: "var(--red-bg)" };
 }
 
 // ── Weekly activity ───────────────────────────────────────
@@ -222,6 +222,17 @@ function skillAxisLabel(key) {
         }[key] ?? key
     );
 }
+
+// ── New user state ────────────────────────────────────────
+const isNewUser = computed(() => (props.stats.completedSessions ?? 0) === 0);
+function scoreColor(score) {
+    if (score === null || score === undefined)
+        return { text: "var(--text-3)", bg: "var(--border)" };
+    if (score >= 80) return { text: "var(--green)", bg: "var(--green-bg)" };
+    if (score >= 50) return { text: "var(--amber)", bg: "var(--amber-bg)" };
+    if (score >= 0) return { text: "var(--red)", bg: "var(--red-bg)" };
+    return { text: "var(--text-3)", bg: "var(--bg-surface2)" };
+}
 </script>
 
 <template>
@@ -229,17 +240,18 @@ function skillAxisLabel(key) {
     <AuthenticatedLayout>
         <template #title>Dashboard</template>
 
+        <!-- Outer wrapper: fills the available height from AuthenticatedLayout, no scroll -->
         <div
-            class="flex h-full flex-col overflow-y-auto p-5 md:p-6 lg:overflow-hidden"
+            class="h-full overflow-y-auto lg:overflow-hidden p-3 sm:p-4 md:p-5 pb-6 sm:pb-4"
         >
             <div
-                class="flex flex-col gap-5 lg:min-h-0 lg:flex-1 lg:flex-row lg:gap-6"
+                class="h-full flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-5 min-h-0"
             >
                 <!-- ── LEFT COLUMN ──────────────────────────────── -->
                 <div
-                    class="flex w-full flex-col gap-5 lg:h-full lg:min-h-0 lg:w-[62%] lg:flex-shrink-0 lg:overflow-hidden"
+                    class="flex flex-col gap-4 w-full lg:w-[62%] lg:flex-shrink-0 lg:min-h-0 lg:overflow-hidden"
                 >
-                    <!-- BANNER CARD -->
+                    <!-- BANNER CARD — tighter padding, no getting started bar -->
                     <div
                         class="rounded-2xl overflow-hidden relative flex-shrink-0"
                         style="
@@ -248,7 +260,7 @@ function skillAxisLabel(key) {
                             box-shadow: var(--shadow-md);
                         "
                     >
-                        <!-- Decorative orbs — speech/mic shapes for interview coaching -->
+                        <!-- Decorative orbs -->
                         <div
                             style="
                                 position: absolute;
@@ -257,7 +269,6 @@ function skillAxisLabel(key) {
                                 pointer-events: none;
                             "
                         >
-                            <!-- Large orb -->
                             <div
                                 style="
                                     position: absolute;
@@ -266,11 +277,10 @@ function skillAxisLabel(key) {
                                     width: 180px;
                                     height: 180px;
                                     border-radius: 50%;
-                                    background: var(--accent-bg);
-                                    opacity: 0.7;
+                                    background: var(--accent-2);
+                                    opacity: 0.12;
                                 "
                             />
-                            <!-- Medium orb -->
                             <div
                                 style="
                                     position: absolute;
@@ -279,11 +289,10 @@ function skillAxisLabel(key) {
                                     width: 110px;
                                     height: 110px;
                                     border-radius: 50%;
-                                    background: var(--accent-bg);
-                                    opacity: 0.45;
+                                    background: var(--accent-2);
+                                    opacity: 0.08;
                                 "
                             />
-                            <!-- Small orb -->
                             <div
                                 style="
                                     position: absolute;
@@ -292,26 +301,26 @@ function skillAxisLabel(key) {
                                     width: 60px;
                                     height: 60px;
                                     border-radius: 50%;
-                                    background: var(--accent-bg);
-                                    opacity: 0.3;
+                                    background: var(--accent-2);
+                                    opacity: 0.05;
                                 "
                             />
                         </div>
 
-                        <!-- Content -->
+                        <!-- Content — tighter padding -->
                         <div
-                            class="relative z-10 flex flex-col justify-between px-5 py-5 sm:px-7 sm:py-6"
+                            class="relative z-10 flex flex-col justify-between px-5 py-4 sm:px-7"
                         >
                             <!-- Top row -->
                             <div>
                                 <p
-                                    class="mb-1 text-[11px] font-medium uppercase tracking-widest"
+                                    class="mb-0.5 text-[11px] font-medium uppercase tracking-widest"
                                     style="color: var(--text-3)"
                                 >
                                     {{ greeting }}, {{ userName }}
                                 </p>
                                 <h1
-                                    class="text-xl font-bold leading-tight tracking-tight sm:text-[1.75rem]"
+                                    class="text-xl font-bold leading-tight tracking-tight sm:text-[1.6rem]"
                                     style="color: var(--text)"
                                 >
                                     {{
@@ -321,23 +330,36 @@ function skillAxisLabel(key) {
                                     }}
                                 </h1>
                                 <p
-                                    class="mt-1 text-[12px]"
+                                    class="mt-0.5 text-[12px]"
                                     style="color: var(--text-3)"
                                 >
-                                    {{
-                                        stats.bestScore
-                                            ? `Best score ${stats.bestScore}/100 · ${currentLevel.title}`
-                                            : "Pick a scenario below to start your first session."
-                                    }}
+                                    <template v-if="stats.bestScore">
+                                        Best score {{ stats.bestScore }}/100
+                                        <span
+                                            style="
+                                                color: var(--accent);
+                                                opacity: 0.6;
+                                                font-size: 8px;
+                                                vertical-align: middle;
+                                            "
+                                        >
+                                            ●</span
+                                        >
+                                        {{ currentLevel.title }}
+                                    </template>
+                                    <template v-else>
+                                        Pick a scenario below to start your
+                                        first session.
+                                    </template>
                                 </p>
                             </div>
 
-                            <!-- Bottom row: stack on mobile, side-by-side from md -->
+                            <!-- Bottom row -->
                             <div
-                                class="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+                                class="mt-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
                             >
                                 <div
-                                    class="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap"
+                                    class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
                                 >
                                     <Link
                                         :href="route('scenarios.index')"
@@ -373,7 +395,7 @@ function skillAxisLabel(key) {
 
                                 <!-- Level badge -->
                                 <div
-                                    class="w-full border-t pt-4 md:w-auto md:border-t-0 md:pt-0 md:text-right"
+                                    class="w-full border-t pt-3 md:w-auto md:border-t-0 md:pt-0 md:text-right"
                                     style="border-color: var(--border)"
                                 >
                                     <div
@@ -385,14 +407,8 @@ function skillAxisLabel(key) {
                                             class="font-normal"
                                             style="color: var(--text-3)"
                                         >
-                                            ·
-                                            <span class="hidden sm:inline">{{
-                                                currentLevel.title
-                                            }}</span>
-                                            <span class="sm:hidden">{{
-                                                currentLevel.title.split(" ")[0]
-                                            }}</span>
-                                        </span>
+                                            · {{ currentLevel.title }}</span
+                                        >
                                     </div>
                                     <div
                                         class="mt-1 h-[3px] w-full max-w-[8rem] rounded-full overflow-hidden md:ml-auto"
@@ -418,22 +434,25 @@ function skillAxisLabel(key) {
                                 </div>
                             </div>
                         </div>
+                        <!-- Getting Started bar REMOVED -->
                     </div>
 
-                    <!-- TWO STAT CARDS SIDE BY SIDE (stack below sm) -->
+                    <!-- TWO STAT CARDS -->
                     <div
                         class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-shrink-0"
                     >
                         <!-- Score trend card -->
                         <div
-                            class="rounded-2xl p-5"
+                            class="rounded-2xl p-4"
                             style="
                                 background: var(--bg-surface);
                                 border: 1px solid var(--border);
                                 box-shadow: var(--shadow-md);
                             "
                         >
-                            <div class="mb-1 flex items-start justify-between gap-2">
+                            <div
+                                class="mb-1 flex items-start justify-between gap-2"
+                            >
                                 <div class="min-w-0">
                                     <div
                                         class="text-[11px] font-medium uppercase tracking-wider"
@@ -446,22 +465,22 @@ function skillAxisLabel(key) {
                                         class="mt-1 text-[2rem] font-bold leading-none tracking-tight tabular-nums"
                                         style="color: var(--text)"
                                     >
-                                        {{ stats.bestScore }}
-                                        <span
+                                        {{ stats.bestScore
+                                        }}<span
                                             class="text-[1rem] font-medium"
                                             style="color: var(--text-3)"
                                             >/100</span
                                         >
                                     </div>
-                                    <div v-else class="mt-1.5">
+                                    <div v-else class="mt-1">
                                         <div
-                                            class="text-[15px] font-semibold leading-tight"
+                                            class="text-[14px] font-semibold leading-tight"
                                             style="color: var(--text-2)"
                                         >
                                             Not scored yet
                                         </div>
                                         <div
-                                            class="mt-0.5 text-[10px] leading-snug"
+                                            class="mt-0.5 text-[10px]"
                                             style="color: var(--text-3)"
                                         >
                                             Complete a session to track progress
@@ -475,97 +494,149 @@ function skillAxisLabel(key) {
                                         background: var(--green-bg);
                                         color: var(--green);
                                     "
-                                    >+{{ stats.scoreImprovement }} this
-                                    month</span
                                 >
-                            </div>
-                            <div
-                                class="text-[11px] mb-3"
-                                style="color: var(--text-3)"
-                            >
-                                Score over last 10 sessions
+                                    +{{ stats.scoreImprovement }} this month
+                                </span>
                             </div>
 
-                            <!-- Area chart -->
-                            <svg
-                                v-if="hasScoreChart"
-                                width="100%"
-                                height="64"
-                                viewBox="0 0 240 64"
-                                preserveAspectRatio="none"
-                                class="block"
-                            >
-                                <defs>
-                                    <linearGradient
-                                        id="scoreGrad"
-                                        x1="0"
-                                        y1="0"
-                                        x2="0"
-                                        y2="1"
-                                    >
-                                        <stop
-                                            offset="0%"
-                                            stop-color="var(--accent-2)"
-                                            stop-opacity="0.32"
-                                        />
-                                        <stop
-                                            offset="100%"
-                                            stop-color="var(--accent)"
-                                            stop-opacity="0"
-                                        />
-                                    </linearGradient>
-                                </defs>
-                                <path
-                                    :d="areaPath(scoreHistory, 240, 64)"
-                                    fill="url(#scoreGrad)"
-                                />
-                                <path
-                                    :d="linePath(scoreHistory, 240, 64)"
-                                    fill="none"
-                                    stroke="var(--accent)"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <circle
-                                    :cx="sparkEndpoint.x"
-                                    :cy="sparkEndpoint.y"
-                                    r="3.5"
-                                    fill="var(--bg-surface)"
-                                    stroke="var(--accent)"
-                                    stroke-width="2"
-                                />
-                            </svg>
                             <div
-                                v-else
-                                class="flex h-16 flex-col items-center justify-center gap-2 rounded-lg px-3"
-                                style="background: var(--bg-surface2)"
+                                class="text-[11px] mb-2"
+                                style="color: var(--text-3)"
                             >
+                                Last 10 sessions
+                            </div>
+
+                            <!-- Chart with Y-axis -->
+                            <div
+                                v-if="hasScoreChart"
+                                class="flex items-stretch gap-2"
+                            >
+                                <!-- Y-axis labels: 100 / 50 / 0 only -->
                                 <div
-                                    class="flex h-8 w-full items-end justify-between gap-1 px-1"
+                                    class="flex flex-col justify-between flex-shrink-0"
+                                    style="height: 56px"
                                 >
                                     <span
-                                        v-for="n in 6"
-                                        :key="n"
-                                        class="flex-1 rounded-sm"
-                                        :style="{
-                                            height: `${20 + n * 6}%`,
-                                            background: 'var(--track-bg)',
-                                        }"
-                                    />
+                                        class="text-[8px] font-medium leading-none tabular-nums"
+                                        style="color: var(--text-3)"
+                                        >100</span
+                                    >
+                                    <span
+                                        class="text-[8px] font-medium leading-none tabular-nums"
+                                        style="color: var(--text-3)"
+                                        >50</span
+                                    >
+                                    <span
+                                        class="text-[8px] font-medium leading-none tabular-nums"
+                                        style="color: var(--text-3)"
+                                        >0</span
+                                    >
                                 </div>
-                                <span
-                                    class="text-[10px] leading-snug text-center"
-                                    style="color: var(--text-3)"
+
+                                <!-- SVG chart — no value labels, just the line -->
+                                <svg
+                                    class="flex-1 block"
+                                    height="56"
+                                    viewBox="0 0 220 56"
+                                    preserveAspectRatio="none"
                                 >
-                                    Your score trend will appear here
-                                </span>
+                                    <defs>
+                                        <linearGradient
+                                            id="scoreGrad"
+                                            x1="0"
+                                            y1="0"
+                                            x2="0"
+                                            y2="1"
+                                        >
+                                            <stop
+                                                offset="0%"
+                                                stop-color="var(--accent-2)"
+                                                stop-opacity="0.28"
+                                            />
+                                            <stop
+                                                offset="100%"
+                                                stop-color="var(--accent)"
+                                                stop-opacity="0"
+                                            />
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Subtle gridlines at 100, 50, 0 -->
+                                    <line
+                                        x1="0"
+                                        y1="2"
+                                        x2="220"
+                                        y2="2"
+                                        stroke="var(--border)"
+                                        stroke-width="0.5"
+                                    />
+                                    <line
+                                        x1="0"
+                                        y1="28"
+                                        x2="220"
+                                        y2="28"
+                                        stroke="var(--border)"
+                                        stroke-width="0.5"
+                                    />
+                                    <line
+                                        x1="0"
+                                        y1="54"
+                                        x2="220"
+                                        y2="54"
+                                        stroke="var(--border)"
+                                        stroke-width="0.5"
+                                    />
+                                    <!-- Area fill -->
+                                    <path
+                                        :d="areaPath(scoreHistory, 220, 56)"
+                                        fill="url(#scoreGrad)"
+                                    />
+                                    <!-- Line -->
+                                    <path
+                                        :d="linePath(scoreHistory, 220, 56)"
+                                        fill="none"
+                                        stroke="var(--accent)"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                    <!-- End dot only -->
+                                    <circle
+                                        :cx="lastPoint(scoreHistory, 220, 56).x"
+                                        :cy="lastPoint(scoreHistory, 220, 56).y"
+                                        r="3.5"
+                                        fill="var(--bg-surface)"
+                                        stroke="var(--accent)"
+                                        stroke-width="2"
+                                    />
+                                </svg>
+                            </div>
+
+                            <!-- Empty state -->
+                            <div
+                                v-else
+                                class="flex h-14 flex-col items-center justify-center text-center px-4 rounded-xl"
+                                style="
+                                    background: var(--bg-surface2);
+                                    border: 1px dashed var(--border-strong);
+                                "
+                            >
+                                <span
+                                    class="text-[11px] font-bold"
+                                    style="color: var(--text-2)"
+                                    >No sessions scored yet</span
+                                >
+                                <span
+                                    class="text-[9px] mt-0.5"
+                                    style="color: var(--text-3)"
+                                    >Finish a session to track your progress
+                                    here</span
+                                >
                             </div>
                         </div>
 
                         <!-- Weekly activity card -->
                         <div
-                            class="rounded-2xl p-5"
+                            class="rounded-2xl p-4"
                             style="
                                 background: var(--bg-surface);
                                 border: 1px solid var(--border);
@@ -608,23 +679,21 @@ function skillAxisLabel(key) {
                                 </span>
                             </div>
                             <div
-                                class="text-[11px] mb-3"
+                                class="text-[11px] mb-2"
                                 style="color: var(--text-3)"
                             >
                                 Daily sessions Sun – Sat
                             </div>
 
-                            <!-- 7-column dot matrix -->
                             <div
                                 class="flex items-stretch justify-between gap-1.5"
-                                style="height: 64px"
+                                style="height: 56px"
                             >
                                 <div
                                     v-for="(count, idx) in activityHistory"
                                     :key="idx"
                                     class="flex flex-1 flex-col items-center"
                                 >
-                                    <!-- 7 stacked dots, evenly spaced to fill the column -->
                                     <div
                                         class="flex flex-1 w-full flex-col-reverse items-center justify-between py-0.5"
                                     >
@@ -632,42 +701,50 @@ function skillAxisLabel(key) {
                                             v-for="row in DOT_ROWS"
                                             :key="row"
                                             class="rounded-[2.5px] transition-colors duration-300"
-                                            style="width: 8px; height: 6px"
+                                            style="width: 8px"
                                             :style="{
+                                                height:
+                                                    count <= 0 && row === 1
+                                                        ? '4px'
+                                                        : '6px',
                                                 background:
                                                     row <= filledDots(count)
                                                         ? idx === todayIdx
                                                             ? 'var(--accent)'
                                                             : 'var(--accent-2)'
-                                                        : 'var(--track-bg)',
+                                                        : count <= 0 &&
+                                                            row === 1
+                                                          ? 'var(--accent-bg)'
+                                                          : 'var(--track-bg)',
                                                 opacity:
                                                     row <= filledDots(count)
                                                         ? idx === todayIdx
                                                             ? 1
                                                             : 0.55
-                                                        : 1,
+                                                        : count <= 0 &&
+                                                            row === 1
+                                                          ? 0.6
+                                                          : 1,
                                             }"
                                         />
                                     </div>
-                                    <!-- Day label, centered under its column -->
                                     <span
-                                        class="mt-1.5 w-full text-center text-[9px] font-semibold leading-none"
+                                        class="mt-1 w-full text-center text-[9px] font-semibold leading-none"
                                         :style="
                                             idx === todayIdx
                                                 ? 'color:var(--accent)'
                                                 : 'color:var(--text-3)'
                                         "
+                                        >{{ weekDays[idx][0] }}</span
                                     >
-                                        {{ weekDays[idx][0] }}
-                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- YOUR SKILLS CARD — grows to fill left column on desktop -->
+                    <!-- YOUR SKILLS CARD — fills remaining height -->
                     <div
-                        class="flex flex-shrink-0 flex-col rounded-2xl p-5 lg:min-h-0 lg:flex-1 lg:overflow-hidden"
+                        class="flex flex-col rounded-2xl p-4 min-h-0 flex-1 lg:overflow-hidden"
                         style="
                             background: var(--bg-surface);
                             border: 1px solid var(--border);
@@ -675,7 +752,7 @@ function skillAxisLabel(key) {
                         "
                     >
                         <div
-                            class="mb-4 flex flex-shrink-0 items-center justify-between"
+                            class="mb-3 flex flex-shrink-0 items-center justify-between"
                         >
                             <div>
                                 <div
@@ -693,135 +770,90 @@ function skillAxisLabel(key) {
                             </div>
                             <Link
                                 :href="route('conversations.index')"
-                                class="text-[11px] font-medium hover:opacity-70 transition-opacity"
+                                class="text-[11px] font-medium hover:opacity-70 transition-all hover:underline underline-offset-2"
                                 style="color: var(--accent)"
                             >
-                                View details
+                                View details →
                             </Link>
                         </div>
 
+                        <!-- New user: single focused CTA instead of 4 "Pending" badges -->
                         <div
-                            class="flex flex-col items-center gap-4 sm:flex-row sm:items-stretch sm:gap-5 lg:min-h-0 lg:flex-1"
+                            v-if="isNewUser"
+                            class="flex flex-1 items-center justify-center"
                         >
-                            <!-- Radar chart -->
                             <div
-                                class="flex w-full max-w-[220px] flex-shrink-0 items-center sm:w-[200px] lg:w-[180px]"
-                            >
-                                <svg
-                                    viewBox="0 0 200 200"
-                                    class="h-auto w-full"
-                                    aria-label="Skills radar chart"
-                                >
-                                    <defs>
-                                        <linearGradient
-                                            id="radarFill"
-                                            x1="0%"
-                                            y1="0%"
-                                            x2="100%"
-                                            y2="100%"
-                                        >
-                                            <stop
-                                                offset="0%"
-                                                stop-color="var(--accent)"
-                                                stop-opacity="0.35"
-                                            />
-                                            <stop
-                                                offset="100%"
-                                                stop-color="var(--accent-2)"
-                                                stop-opacity="0.15"
-                                            />
-                                        </linearGradient>
-                                    </defs>
-
-                                    <g
-                                        v-for="ring in radarGridRings"
-                                        :key="ring"
-                                    >
-                                        <polygon
-                                            :points="
-                                                RADAR_ANGLES.map((a) => {
-                                                    const p = radarPoint(
-                                                        ring,
-                                                        a,
-                                                        RADAR_CX,
-                                                        RADAR_CY,
-                                                        RADAR_MAX_R,
-                                                    );
-                                                    return `${p.x},${p.y}`;
-                                                }).join(' ')
-                                            "
-                                            fill="none"
-                                            stroke="var(--track-bg)"
-                                            stroke-width="1"
-                                        />
-                                    </g>
-
-                                    <line
-                                        v-for="skill in radarSkills"
-                                        :key="`axis-${skill.key}`"
-                                        :x1="RADAR_CX"
-                                        :y1="RADAR_CY"
-                                        :x2="skill.axis.x"
-                                        :y2="skill.axis.y"
-                                        stroke="var(--border)"
-                                        stroke-width="1"
-                                    />
-
-                                    <polygon
-                                        v-if="
-                                            radarSkills.some((s) => !s.isPending)
-                                        "
-                                        :points="radarPolygon"
-                                        fill="url(#radarFill)"
-                                        stroke="var(--accent)"
-                                        stroke-width="2"
-                                        stroke-linejoin="round"
-                                    />
-
-                                    <circle
-                                        v-for="skill in radarSkills"
-                                        :key="`dot-${skill.key}`"
-                                        v-show="!skill.isPending"
-                                        :cx="skill.point.x"
-                                        :cy="skill.point.y"
-                                        r="3.5"
-                                        fill="var(--bg-surface)"
-                                        stroke="var(--accent)"
-                                        stroke-width="2"
-                                    />
-
-                                    <text
-                                        v-for="skill in radarSkills"
-                                        :key="`label-${skill.key}`"
-                                        :x="skill.labelPos.x"
-                                        :y="skill.labelPos.y"
-                                        text-anchor="middle"
-                                        dominant-baseline="middle"
-                                        class="text-[9px] font-semibold"
-                                        fill="var(--text-2)"
-                                    >
-                                        {{
-                                            skillAxisLabel(skill.key)
-                                        }}
-                                    </text>
-                                </svg>
-                            </div>
-
-                            <!-- Skill legend -->
-                            <div
-                                class="grid w-full min-w-0 flex-1 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-rows-2 lg:content-stretch"
+                                class="flex flex-col items-center gap-3 text-center max-w-xs"
                             >
                                 <div
-                                    v-for="skill in skillsWithMeta"
+                                    class="h-10 w-10 rounded-xl flex items-center justify-center"
+                                    style="background: var(--accent-bg)"
+                                >
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="var(--accent)"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <polygon
+                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                        />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-[13px] font-semibold"
+                                        style="color: var(--text-2)"
+                                    >
+                                        Complete a session to unlock skills
+                                    </p>
+                                    <p
+                                        class="mt-1 text-[11px]"
+                                        style="color: var(--text-3)"
+                                    >
+                                        Your clarity, confidence, and
+                                        adaptability scores will show here after
+                                        your first practice.
+                                    </p>
+                                </div>
+                                <Link
+                                    :href="route('scenarios.index')"
+                                    class="btn-primary text-[11px] px-4 py-2"
+                                >
+                                    Start Practice →
+                                </Link>
+                            </div>
+                        </div>
+
+                        <!-- Has data: radar + skill badges -->
+                        <div
+                            v-else
+                            class="grid skills-grid gap-3 sm:gap-4 flex-1 min-h-0"
+                            style="
+                                grid-template-columns: 1fr 1fr;
+                                grid-template-areas: 'left right' 'circle circle';
+                            "
+                        >
+                            <!-- Left 2 badges -->
+                            <div
+                                class="flex flex-col gap-2"
+                                style="grid-area: left"
+                            >
+                                <div
+                                    v-for="skill in skillsWithMeta.slice(0, 2)"
                                     :key="skill.key"
-                                    class="flex items-center gap-3 rounded-xl px-3 py-2.5 lg:h-full"
+                                    class="flex items-center gap-3 rounded-xl px-3 py-2.5"
                                     style="
                                         background: var(--bg-surface2);
                                         border: 1px solid var(--border);
                                     "
                                 >
                                     <div
-                                        class="h-8 w-1 flex-shrink-0 rounded-full"
+                                        class="h-8 w-1.5 flex-shrink-0 rounded-full"
                                         :style="{
                                             background: skill.isPending
                                                 ? 'var(--track-bg)'
@@ -835,13 +867,15 @@ function skillAxisLabel(key) {
                                         >
                                             {{ skill.label }}
                                         </div>
-                                        <div class="mt-0.5 flex items-center gap-1.5">
+                                        <div
+                                            class="mt-0.5 flex items-center gap-1.5"
+                                        >
                                             <span
                                                 class="text-[13px] font-bold tabular-nums leading-none"
                                                 :style="
                                                     skill.isPending
-                                                        ? 'color: var(--text-3)'
-                                                        : 'color: var(--text)'
+                                                        ? 'color:var(--text-3)'
+                                                        : 'color:var(--text)'
                                                 "
                                             >
                                                 {{
@@ -852,11 +886,10 @@ function skillAxisLabel(key) {
                                             </span>
                                             <span
                                                 v-if="skill.isPending"
-                                                class="text-[10px] leading-tight"
+                                                class="text-[10px]"
                                                 style="color: var(--text-3)"
+                                                >Pending</span
                                             >
-                                                Pending
-                                            </span>
                                             <span
                                                 v-else-if="skill.delta !== 0"
                                                 class="rounded px-1.5 py-0.5 text-[10px] font-semibold"
@@ -864,12 +897,138 @@ function skillAxisLabel(key) {
                                                     background: var(--green-bg);
                                                     color: var(--green);
                                                 "
+                                                >+{{ skill.delta }}%</span
                                             >
-                                                +{{ skill.delta }}%
-                                            </span>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Right 2 badges -->
+                            <div
+                                class="flex flex-col gap-2"
+                                style="grid-area: right"
+                            >
+                                <div
+                                    v-for="skill in skillsWithMeta.slice(2, 4)"
+                                    :key="skill.key"
+                                    class="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                                    style="
+                                        background: var(--bg-surface2);
+                                        border: 1px solid var(--border);
+                                    "
+                                >
+                                    <div
+                                        class="h-8 w-1.5 flex-shrink-0 rounded-full"
+                                        :style="{
+                                            background: skill.isPending
+                                                ? 'var(--track-bg)'
+                                                : 'var(--gradient-primary)',
+                                        }"
+                                    />
+                                    <div class="min-w-0 flex-1">
+                                        <div
+                                            class="text-[11px] font-medium leading-tight"
+                                            style="color: var(--text-2)"
+                                        >
+                                            {{ skill.label }}
+                                        </div>
+                                        <div
+                                            class="mt-0.5 flex items-center gap-1.5"
+                                        >
+                                            <span
+                                                class="text-[13px] font-bold tabular-nums leading-none"
+                                                :style="
+                                                    skill.isPending
+                                                        ? 'color:var(--text-3)'
+                                                        : 'color:var(--text)'
+                                                "
+                                            >
+                                                {{
+                                                    skill.isPending
+                                                        ? "—"
+                                                        : `${skill.value}%`
+                                                }}
+                                            </span>
+                                            <span
+                                                v-if="skill.isPending"
+                                                class="text-[10px]"
+                                                style="color: var(--text-3)"
+                                                >Pending</span
+                                            >
+                                            <span
+                                                v-else-if="skill.delta !== 0"
+                                                class="rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                                                style="
+                                                    background: var(--green-bg);
+                                                    color: var(--green);
+                                                "
+                                                >+{{ skill.delta }}%</span
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Circle -->
+                            <div
+                                class="flex items-center justify-center"
+                                style="grid-area: circle"
+                            >
+                                <svg
+                                    viewBox="0 0 120 120"
+                                    class="h-auto w-[120px]"
+                                    role="img"
+                                    aria-label="Average skill score"
+                                >
+                                    <circle
+                                        cx="60"
+                                        cy="60"
+                                        r="50"
+                                        fill="none"
+                                        stroke="var(--track-bg)"
+                                        stroke-width="10"
+                                    />
+                                    <circle
+                                        cx="60"
+                                        cy="60"
+                                        r="50"
+                                        fill="none"
+                                        stroke="var(--accent)"
+                                        stroke-width="10"
+                                        stroke-linecap="round"
+                                        transform="rotate(-90 60 60)"
+                                        :stroke-dasharray="314"
+                                        :stroke-dashoffset="
+                                            314 -
+                                            (314 * averageSkillScore) / 100
+                                        "
+                                        style="
+                                            transition: stroke-dashoffset 1s
+                                                ease;
+                                        "
+                                    />
+                                    <text
+                                        x="60"
+                                        y="56"
+                                        text-anchor="middle"
+                                        font-size="22"
+                                        font-weight="800"
+                                        fill="var(--text)"
+                                    >
+                                        {{ averageSkillScore }}%
+                                    </text>
+                                    <text
+                                        x="60"
+                                        y="74"
+                                        text-anchor="middle"
+                                        font-size="10"
+                                        font-weight="600"
+                                        fill="var(--text-3)"
+                                    >
+                                        average
+                                    </text>
+                                </svg>
                             </div>
                         </div>
                     </div>
@@ -878,20 +1037,19 @@ function skillAxisLabel(key) {
 
                 <!-- ── RIGHT COLUMN ─────────────────────────────── -->
                 <div
-                    class="flex min-w-0 flex-1 flex-col gap-5 lg:h-full lg:min-h-0 lg:overflow-hidden"
+                    class="flex min-w-0 flex-1 flex-col gap-4 lg:h-full lg:min-h-0 lg:overflow-hidden"
                 >
-                    <!-- RECENT SESSIONS -->
+                    <!-- RECENT SESSIONS — grows to fill -->
                     <div
-                        class="flex flex-shrink-0 flex-col overflow-hidden rounded-2xl lg:min-h-0 lg:flex-1"
+                        class="flex flex-col overflow-hidden rounded-2xl min-h-0 flex-1"
                         style="
                             background: var(--bg-surface);
                             border: 1px solid var(--border);
                             box-shadow: var(--shadow-md);
                         "
                     >
-                        <!-- Header (fixed, doesn't scroll) -->
                         <div
-                            class="flex items-center justify-between px-5 py-4 border-b flex-shrink-0"
+                            class="flex items-center justify-between px-5 py-3 border-b flex-shrink-0"
                             style="border-color: var(--border)"
                         >
                             <div>
@@ -910,20 +1068,17 @@ function skillAxisLabel(key) {
                             </div>
                             <Link
                                 :href="route('conversations.index')"
-                                class="text-[11px] font-medium hover:opacity-70 transition-opacity"
+                                class="text-[11px] font-medium hover:opacity-70 transition-opacity hover:underline underline-offset-2"
                                 style="color: var(--accent)"
-                                >View all</Link
+                                >View all →</Link
                             >
                         </div>
 
-                        <!-- Session list -->
-                        <div
-                            class="min-h-0 flex-1 overflow-y-auto lg:flex lg:flex-col"
-                        >
+                        <div class="min-h-0 flex-1 overflow-y-auto">
                             <!-- Empty state -->
                             <div
                                 v-if="recentSessions.length === 0"
-                                class="flex h-full min-h-[12rem] flex-col justify-between px-5 py-5"
+                                class="flex h-full flex-col justify-between px-5 py-5"
                             >
                                 <div>
                                     <div class="mb-4 text-center">
@@ -960,7 +1115,6 @@ function skillAxisLabel(key) {
                                             here.
                                         </p>
                                     </div>
-
                                     <div class="flex flex-col gap-2.5">
                                         <div
                                             v-for="(row, i) in [
@@ -1011,16 +1165,15 @@ function skillAxisLabel(key) {
                                         </div>
                                     </div>
                                 </div>
-
                                 <Link
                                     :href="route('scenarios.index')"
-                                    class="btn-primary mt-4 self-center text-[11px] px-4 py-2 lg:mt-0"
+                                    class="btn-primary mt-4 self-center text-[11px] px-4 py-2"
                                     >Browse Scenarios</Link
                                 >
                             </div>
 
-                            <!-- Session rows - scrollable -->
-                            <div v-else>
+                            <!-- Session rows -->
+                            <div v-else class="flex flex-col">
                                 <Link
                                     v-for="session in recentSessions.slice(
                                         0,
@@ -1053,7 +1206,6 @@ function skillAxisLabel(key) {
                                             />
                                         </svg>
                                     </div>
-
                                     <div class="min-w-0 flex-1">
                                         <div
                                             class="truncate text-[12px] font-medium"
@@ -1071,13 +1223,13 @@ function skillAxisLabel(key) {
                                             {{ formatDate(session.created_at) }}
                                         </div>
                                     </div>
-
                                     <div
                                         class="flex flex-shrink-0 items-center gap-1.5"
                                     >
+                                        <!-- Score badge: color-coded filled pill -->
                                         <span
                                             v-if="session.score !== null"
-                                            class="rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums"
+                                            class="rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums"
                                             :style="{
                                                 color: scoreColor(session.score)
                                                     .text,
@@ -1088,12 +1240,14 @@ function skillAxisLabel(key) {
                                         >
                                             {{ session.score }}/100
                                         </span>
+
+                                        <!-- Status badge: Resume = solid filled, Review = ghost outlined -->
                                         <span
-                                            class="rounded px-2 py-1 text-[10px] font-medium border"
+                                            class="rounded-full px-2.5 py-0.5 text-[10px] font-semibold"
                                             :style="
                                                 session.is_completed
-                                                    ? 'color: var(--text-2); border-color: var(--border-strong); background: transparent;'
-                                                    : 'color: var(--accent); border-color: var(--accent); background: var(--accent-bg);'
+                                                    ? 'color: var(--text-3); border: 1px solid var(--border-strong); background: transparent;'
+                                                    : 'color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent);'
                                             "
                                         >
                                             {{
@@ -1104,44 +1258,76 @@ function skillAxisLabel(key) {
                                         </span>
                                     </div>
                                 </Link>
+                                <div
+                                    v-if="recentSessions.length < 8"
+                                    class="flex items-center justify-center p-5"
+                                >
+                                    <span
+                                        class="text-[11px] font-medium"
+                                        style="color: var(--text-3)"
+                                        >Past sessions will appear here</span
+                                    >
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- STREAK + STAT -->
+                    <!-- STREAK + STATS — fixed height at bottom -->
                     <div
-                        class="flex-shrink-0 rounded-2xl p-5"
+                        class="flex-shrink-0 rounded-2xl p-4 mb-2 lg:mb-0"
                         style="
-                            background: var(--bg-surface);
-                            border: 1px solid var(--border);
-                            box-shadow: var(--shadow-md);
+                            background: #0f7c6e;
+                            box-shadow: 0 8px 24px rgba(15, 124, 110, 0.35);
+                            border: none;
                         "
                     >
-                        <div
-                            class="grid grid-cols-3 divide-x"
-                            style="--tw-divide-opacity: 1"
-                        >
-                            <div class="pr-4">
+                        <div class="grid grid-cols-3">
+                            <div
+                                class="pr-4"
+                                style="
+                                    border-right: 1px solid
+                                        rgba(255, 255, 255, 0.2);
+                                "
+                            >
                                 <div
-                                    class="text-[10px] font-medium uppercase tracking-wider mb-1"
-                                    style="color: var(--text-3)"
+                                    class="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                                    style="color: rgba(255, 255, 255, 0.75)"
                                 >
                                     Streak
                                 </div>
                                 <div
-                                    class="text-[1.4rem] font-bold tabular-nums"
-                                    style="color: var(--text)"
+                                    class="text-[1.3rem] font-bold tabular-nums"
+                                    style="color: #ffffff"
                                 >
-                                    {{ stats.currentStreak }}
+                                    {{
+                                        stats.currentStreak > 0
+                                            ? stats.currentStreak
+                                            : (stats.bestStreak ?? 0)
+                                    }}
                                     <span
-                                        class="text-[11px] font-normal"
-                                        style="color: var(--text-3)"
-                                        >days</span
+                                        class="text-[11px] font-medium"
+                                        style="color: rgba(255, 255, 255, 0.75)"
                                     >
+                                        {{
+                                            stats.currentStreak > 0
+                                                ? "days"
+                                                : "best"
+                                        }}
+                                    </span>
                                 </div>
                                 <div
-                                    class="text-[10px]"
-                                    style="color: var(--text-3)"
+                                    class="text-[10px] font-medium"
+                                    style="color: rgba(255, 255, 255, 0.65)"
+                                >
+                                    {{
+                                        stats.currentStreak > 0
+                                            ? `Best: ${stats.bestStreak ?? 0}d`
+                                            : "No active streak"
+                                    }}
+                                </div>
+                                <div
+                                    class="text-[10px] font-medium"
+                                    style="color: rgba(255, 255, 255, 0.65)"
                                 >
                                     Best:
                                     {{
@@ -1150,27 +1336,34 @@ function skillAxisLabel(key) {
                                 </div>
                             </div>
 
-                            <div class="px-4">
+                            <div
+                                class="px-4"
+                                style="
+                                    border-right: 1px solid
+                                        rgba(255, 255, 255, 0.2);
+                                "
+                            >
                                 <div
-                                    class="text-[10px] font-medium uppercase tracking-wider mb-1"
-                                    style="color: var(--text-3)"
+                                    class="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                                    style="color: rgba(255, 255, 255, 0.75)"
                                 >
                                     Total
                                 </div>
                                 <div
-                                    class="text-[1.4rem] font-bold tabular-nums"
-                                    style="color: var(--text)"
+                                    class="text-[1.3rem] font-bold tabular-nums"
+                                    style="color: #ffffff"
                                 >
-                                    {{ stats.totalSessions }}
-                                    <span
-                                        class="text-[11px] font-normal"
-                                        style="color: var(--text-3)"
-                                        >sessions</span
+                                    {{ stats.totalSessions
+                                    }}<span
+                                        class="text-[11px] font-medium"
+                                        style="color: rgba(255, 255, 255, 0.75)"
+                                    >
+                                        sessions</span
                                     >
                                 </div>
                                 <div
-                                    class="text-[10px]"
-                                    style="color: var(--text-3)"
+                                    class="text-[10px] font-medium"
+                                    style="color: rgba(255, 255, 255, 0.65)"
                                 >
                                     +{{ stats.thisWeek ?? 0 }} this week
                                 </div>
@@ -1178,25 +1371,26 @@ function skillAxisLabel(key) {
 
                             <div class="pl-4">
                                 <div
-                                    class="text-[10px] font-medium uppercase tracking-wider mb-1"
-                                    style="color: var(--text-3)"
+                                    class="text-[10px] font-semibold uppercase tracking-wider mb-1"
+                                    style="color: rgba(255, 255, 255, 0.75)"
                                 >
                                     Done
                                 </div>
                                 <div
-                                    class="text-[1.4rem] font-bold tabular-nums"
-                                    style="color: var(--text)"
+                                    class="text-[1.3rem] font-bold tabular-nums"
+                                    style="color: #ffffff"
                                 >
-                                    {{ stats.completedSessions }}
-                                    <span
-                                        class="text-[11px] font-normal"
-                                        style="color: var(--text-3)"
-                                        >completed</span
+                                    {{ stats.completedSessions
+                                    }}<span
+                                        class="text-[11px] font-medium"
+                                        style="color: rgba(255, 255, 255, 0.75)"
+                                    >
+                                        completed</span
                                     >
                                 </div>
                                 <div
-                                    class="text-[10px]"
-                                    style="color: var(--text-3)"
+                                    class="text-[10px] font-medium"
+                                    style="color: rgba(255, 255, 255, 0.65)"
                                 >
                                     +{{ stats.completedThisWeek ?? 0 }} this
                                     week
@@ -1205,6 +1399,7 @@ function skillAxisLabel(key) {
                         </div>
                     </div>
                 </div>
+                <!-- end RIGHT COLUMN -->
             </div>
         </div>
     </AuthenticatedLayout>

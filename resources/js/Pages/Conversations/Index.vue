@@ -25,7 +25,7 @@ const getEvaluationStatus = (score, isCompleted) => {
     if (!isCompleted) {
         return {
             text: "In Progress",
-            bg: "rgba(124, 58, 237, 0.1)",
+            bg: "var(--accent-bg)",
             color: "var(--accent)",
         };
     }
@@ -36,25 +36,19 @@ const getEvaluationStatus = (score, isCompleted) => {
             color: "var(--text-2)",
         };
     }
-    if (score >= 80) {
+    if (score >= 80)
         return {
-            text: `Score: ${score}/100`,
-            bg: "rgba(16, 185, 129, 0.1)",
-            color: "#10b981",
+            text: `${score}/100`,
+            bg: "var(--green-bg)",
+            color: "var(--green)",
         };
-    }
-    if (score >= 60) {
+    if (score >= 50)
         return {
-            text: `Score: ${score}/100`,
-            bg: "rgba(245, 158, 11, 0.1)",
-            color: "#f59e0b",
+            text: `${score}/100`,
+            bg: "var(--amber-bg)",
+            color: "var(--amber)",
         };
-    }
-    return {
-        text: `Score: ${score}/100`,
-        bg: "rgba(239, 68, 68, 0.1)",
-        color: "#ef4444",
-    };
+    return { text: `${score}/100`, bg: "var(--red-bg)", color: "var(--red)" };
 };
 </script>
 
@@ -97,7 +91,9 @@ const getEvaluationStatus = (score, isCompleted) => {
                                 style="
                                     border-color: var(--border);
                                     color: var(--text-3);
-                                    background: var(--bg-surface2);
+                                    background: var(--bg);
+                                    border-bottom: 2px solid
+                                        var(--border-strong);
                                 "
                             >
                                 <th class="py-4 px-6 font-semibold">
@@ -117,22 +113,11 @@ const getEvaluationStatus = (score, isCompleted) => {
                             <tr
                                 v-for="session in conversations"
                                 :key="session.id"
-                                class="transition-colors duration-150 cursor-pointer"
-                                style=""
-                                onmouseover="
-                                    this.style.background = 'var(--accent-bg)'
-                                "
-                                onmouseout="
-                                    this.style.background = 'transparent'
-                                "
+                                class="session-row transition-colors duration-150 cursor-pointer"
                             >
                                 <!-- Title + Meta Block -->
-                                <td class="py-4 px-6">
+                                <td class="py-5 px-6">
                                     <div class="flex items-center gap-2">
-                                        <div
-                                            class="h-2 w-2 rounded-full flex-shrink-0"
-                                            style="background: var(--accent)"
-                                        />
                                         <div
                                             class="font-semibold text-[13px]"
                                             style="color: var(--text)"
@@ -193,17 +178,17 @@ const getEvaluationStatus = (score, isCompleted) => {
                                 >
                                     <Link
                                         :href="`/conversations/${session.id}`"
-                                        class="inline-flex items-center gap-1 font-bold no-underline transition-transform duration-200 hover:translate-x-px"
-                                        :style="{
-                                            color: session.is_completed
-                                                ? 'var(--text-2)'
-                                                : 'var(--accent)',
-                                        }"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold no-underline transition-all duration-150"
+                                        :style="
+                                            session.is_completed
+                                                ? 'color: var(--text-2); border: 1px solid var(--border-strong); background: transparent;'
+                                                : 'color: var(--accent); border: 1px solid var(--accent); background: var(--accent-bg);'
+                                        "
                                     >
                                         {{
                                             session.is_completed
-                                                ? "Review Feedback"
-                                                : "Resume Session"
+                                                ? "Review"
+                                                : "Resume"
                                         }}
                                         <svg
                                             width="12"

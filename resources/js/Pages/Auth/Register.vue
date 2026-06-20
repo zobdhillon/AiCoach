@@ -41,7 +41,7 @@ const submit = () => {
                 height: 320px;
                 bottom: -80px;
                 right: -100px;
-                background: var(--gradient-brand);
+                background: var(--gradient-primary);
             "
         ></div>
 
@@ -58,7 +58,7 @@ const submit = () => {
             <div class="flex items-center gap-3 mb-6">
                 <div
                     class="flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0"
-                    style="background: var(--gradient-brand)"
+                    style="background: var(--gradient-primary)"
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                         <path
@@ -75,7 +75,7 @@ const submit = () => {
                 >
             </div>
 
-            <h1 class="text-2xl font-bold mb-1" style="color: var(--text)">
+            <h1 class="text-2xl font-extrabold mb-1" style="color: var(--text)">
                 Create account
             </h1>
             <p class="text-sm mb-6" style="color: var(--text-2)">

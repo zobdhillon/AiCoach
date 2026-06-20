@@ -5,8 +5,12 @@ import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { createApp, h } from "vue";
 import { ZiggyVue } from "../../vendor/tightenco/ziggy";
+import { useTheme } from "./composables/useTheme";
 
 const appName = import.meta.env.VITE_APP_NAME || "Laravel";
+
+const { initTheme } = useTheme();
+initTheme();
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -22,7 +26,7 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: "#7c3aed",
+        color: "#0f7c6e",
         delay: 150,
     },
 });

@@ -34,19 +34,22 @@ const startSession = (scenarioId) => {
     router.post("/conversations", { scenario_id: scenarioId });
 };
 
-// Maps DB color → your existing CSS classes from app.css
-const colorMap = {
-    purple: { iconClass: "scenario-icon" },
-
-};
-
 const difficultyMap = {
     Beginner: { bg: "var(--green-bg)", text: "var(--green)" },
     Intermediate: { bg: "var(--accent-bg)", text: "var(--accent)" },
     Advanced: { bg: "var(--red-bg)", text: "var(--red)" },
 };
 
-const getColor = (color) => colorMap[color] ?? colorMap["purple"];
+const colorMap = {
+    Interviews: { bg: "var(--accent-bg)", color: "var(--accent)" },
+    Career: { bg: "rgba(107, 79, 196, 0.12)", color: "#6b4fc4" },
+    Sales: { bg: "rgba(30, 95, 138, 0.12)", color: "#1e5f8a" },
+    Leadership: { bg: "rgba(180, 83, 9, 0.12)", color: "var(--amber)" },
+    "Customer Service": { bg: "var(--green-bg)", color: "var(--green)" },
+    Freelance: { bg: "rgba(45, 156, 138, 0.12)", color: "#2d9c8a" },
+};
+const getColor = (category) => colorMap[category] ?? colorMap["Interviews"];
+
 const getDiff = (diff) => difficultyMap[diff] ?? difficultyMap["Intermediate"];
 </script>
 
@@ -59,13 +62,25 @@ const getDiff = (diff) => difficultyMap[diff] ?? difficultyMap["Intermediate"];
         <div class="p-4 md:p-7">
             <!-- Heading -->
             <div class="mb-6">
-                <h1
-                    class="text-[clamp(1.3rem,4vw,1.9rem)] font-extrabold leading-tight tracking-tight"
-                    style="color: var(--text)"
-                >
-                    What will you
-                    <span class="grad-text">practice today?</span>
-                </h1>
+                <div class="flex items-center gap-3">
+                    <h1
+                        class="text-[clamp(1.3rem,4vw,1.9rem)] font-extrabold leading-tight tracking-tight"
+                        style="color: var(--text)"
+                    >
+                        What will you
+                        <span class="grad-text">practice today?</span>
+                    </h1>
+                    <span
+                        class="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+                        style="
+                            background: var(--accent-bg);
+                            color: var(--accent);
+                            border: 1px solid var(--accent);
+                        "
+                    >
+                        {{ scenarios.length }} scenarios
+                    </span>
+                </div>
                 <p
                     class="mt-1.5 text-[12px] sm:text-[13px]"
                     style="color: var(--text-2)"
@@ -76,50 +91,64 @@ const getDiff = (diff) => difficultyMap[diff] ?? difficultyMap["Intermediate"];
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-2 mb-4 md:mb-6">
-                <!-- Category pills -->
-                <div class="flex flex-wrap gap-2">
-                    <button
-                        v-for="cat in categories"
-                        :key="cat"
-                        @click="activeCategory = cat"
-                        class="px-3 py-1.5 rounded-full text-[11px] sm:text-[12px] font-semibold border-0 cursor-pointer transition-all duration-200 min-h-[36px]"
-                        :style="
-                            activeCategory === cat
-                                ? 'background: var(--gradient-accent); color: #fff; box-shadow: var(--shadow-btn);'
-                                : 'background: var(--bg-surface); color: var(--text-2); border: 1px solid var(--border-strong);'
-                        "
+            <div class="flex flex-wrap items-center gap-4 mb-4 md:mb-6">
+                <!-- Category group -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span
+                        class="text-[10px] font-bold uppercase tracking-wider flex-shrink-0"
+                        style="color: var(--text-3)"
+                        >Category</span
                     >
-                        {{ cat }}
-                    </button>
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            v-for="cat in categories"
+                            :key="cat"
+                            @click="activeCategory = cat"
+                            class="px-3 py-1.5 rounded-full text-[11px] sm:text-[12px] font-semibold cursor-pointer transition-all duration-200 min-h-[36px]"
+                            :style="
+                                activeCategory === cat
+                                    ? 'background: var(--accent-bg); color: var(--accent); border: 1.5px solid var(--accent);'
+                                    : 'background: var(--bg-surface); color: var(--text-2); border: 1px solid var(--border-strong);'
+                            "
+                        >
+                            {{ cat }}
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Separator -->
+                <!-- Divider -->
                 <div
-                    class="hidden sm:block w-px h-4 self-center"
+                    class="hidden sm:block w-px h-5 self-center flex-shrink-0"
                     style="background: var(--border-strong)"
                 ></div>
 
-                <!-- Difficulty pills -->
-                <div class="flex flex-wrap gap-2">
-                    <button
-                        v-for="diff in [
-                            'All',
-                            'Beginner',
-                            'Intermediate',
-                            'Advanced',
-                        ]"
-                        :key="diff"
-                        @click="activeDifficulty = diff"
-                        class="px-3 py-1.5 rounded-full text-[11px] sm:text-[12px] font-semibold border-0 cursor-pointer transition-all duration-200 min-h-[36px]"
-                        :style="
-                            activeDifficulty === diff
-                                ? 'background: var(--gradient-accent); color: #fff; box-shadow: var(--shadow-btn);'
-                                : 'background: var(--bg-surface); color: var(--text-2); border: 1px solid var(--border-strong);'
-                        "
+                <!-- Difficulty group -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span
+                        class="text-[10px] font-bold uppercase tracking-wider flex-shrink-0"
+                        style="color: var(--text-3)"
+                        >Difficulty</span
                     >
-                        {{ diff }}
-                    </button>
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            v-for="diff in [
+                                'All',
+                                'Beginner',
+                                'Intermediate',
+                                'Advanced',
+                            ]"
+                            :key="diff"
+                            @click="activeDifficulty = diff"
+                            class="px-3 py-1.5 rounded-full text-[11px] sm:text-[12px] font-semibold cursor-pointer transition-all duration-200 min-h-[36px]"
+                            :style="
+                                activeDifficulty === diff
+                                    ? 'background: var(--accent-bg); color: var(--accent); border: 1.5px solid var(--accent);'
+                                    : 'background: var(--bg-surface); color: var(--text-2); border: 1px solid var(--border-strong);'
+                            "
+                        >
+                            {{ diff }}
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Count -->
@@ -163,14 +192,14 @@ const getDiff = (diff) => difficultyMap[diff] ?? difficultyMap["Intermediate"];
                 <div
                     v-for="scenario in filteredScenarios"
                     :key="scenario.id"
-                    class="card card-hover flex flex-col gap-3 p-4 md:p-6 h-full cursor-pointer"
+                    class="card card-hover flex flex-col gap-3 p-4 md:p-5 h-full min-h-[220px] cursor-pointer"
                     @click="openPreview(scenario)"
                 >
                     <!-- Top row: icon + difficulty badge -->
                     <div class="flex items-start justify-between">
                         <div
                             class="flex h-10 w-10 items-center justify-center rounded-xl text-white flex-shrink-0"
-                            :class="getColor(scenario.color).iconClass"
+                            :style="`background: ${getColor(scenario.category).bg}; color: ${getColor(scenario.category).color}`"
                         >
                             <svg
                                 width="18"
@@ -199,7 +228,11 @@ const getDiff = (diff) => difficultyMap[diff] ?? difficultyMap["Intermediate"];
                     <div class="flex items-center gap-2">
                         <span
                             class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                            :style="`background: ${getDiff(scenario.difficulty).bg}; color: ${getDiff(scenario.difficulty).text}`"
+                            style="
+                                background: var(--bg-surface);
+                                color: var(--text-2);
+                                border: 1px solid var(--border-strong);
+                            "
                         >
                             {{ scenario.category }}
                         </span>
@@ -233,8 +266,8 @@ const getDiff = (diff) => difficultyMap[diff] ?? difficultyMap["Intermediate"];
                             {{ scenario.title }}
                         </h2>
                         <p
-                            class="text-[12px] line-clamp-3"
-                            style="color: var(--text-2)"
+                            class="text-[12px] font-medium line-clamp-3"
+                            style="color: var(--text-2); opacity: 0.75"
                         >
                             {{ scenario.description }}
                         </p>
@@ -243,7 +276,7 @@ const getDiff = (diff) => difficultyMap[diff] ?? difficultyMap["Intermediate"];
                     <!-- CTA -->
                     <button
                         @click.stop="openPreview(scenario)"
-                        class="btn-primary mt-auto w-full justify-center text-xs !py-[10px]"
+                        class="explore-btn mt-auto w-full justify-center text-xs py-[10px] rounded-lg font-semibold inline-flex items-center gap-2 transition-all duration-200"
                     >
                         Explore Scenario
                         <svg

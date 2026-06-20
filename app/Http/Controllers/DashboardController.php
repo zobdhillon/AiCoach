@@ -147,7 +147,7 @@ class DashboardController extends Controller
         $recentSessions = Conversation::where('user_id', $userId)
             ->with('scenario:id,title,color')
             ->latest()
-            ->take(5)
+            ->take(10)
             ->get(['id', 'scenario_id', 'created_at', 'status', 'scores'])
             ->map(function ($c) {
                 $scores = is_array($c->scores)

@@ -424,7 +424,10 @@ class ScenarioSeeder extends Seeder
         ];
 
         foreach ($scenarios as $scenario) {
-            Scenario::create($scenario);
+            Scenario::firstOrCreate(
+                ['title' => $scenario['title']],
+                $scenario
+            );
         }
     }
 }

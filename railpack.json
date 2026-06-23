@@ -1,5 +1,12 @@
 {
     "php": {
         "version": "8.4"
+    },
+    "install": {
+        "commands": [
+            "composer install --no-dev --optimize-autoloader",
+            "npm ci",
+            "npm run build"
+        ]
     }
 }

@@ -4,6 +4,18 @@
     <head>
         <meta charset="utf-8">
         <style>
+            @page {
+                margin-top: 90px;
+                margin-bottom: 40px;
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            @page :first {
+                margin-top: 0;
+                margin-bottom: 40px;
+            }
+
             * {
                 margin: 0;
                 padding: 0;
@@ -15,9 +27,11 @@
                 font-size: 11px;
                 color: #0d1f2d;
                 background: #ffffff;
+                padding-top: 60px;
             }
 
             .header {
+                margin-top: -60px;
                 background: #0f7c6e;
                 padding: 32px 40px 28px;
                 color: white;
@@ -48,46 +62,45 @@
                 padding: 28px 40px;
             }
 
-            .section-header {
-                display: flex;
-                align-items: center;
-                gap: 10px;
+            .section-header-table {
+                width: 100%;
+                border-collapse: collapse;
                 margin-bottom: 14px;
-                margin-top: 28px;
             }
 
-            .section-header:first-child {
-                margin-top: 0;
-            }
-
-            .section-dot {
+            .section-bar {
                 width: 4px;
-                height: 16px;
-                background: #0f7c6e;
-                border-radius: 2px;
-                flex-shrink: 0;
+                background-color: #0f7c6e;
+                font-size: 1px;
+                line-height: 1px;
+                padding: 0;
             }
 
             .section-title {
+                padding-left: 10px;
                 font-size: 9px;
                 font-weight: bold;
                 text-transform: uppercase;
                 letter-spacing: .1em;
                 color: #0f7c6e;
+                vertical-align: middle;
+                padding-top: 0;
+                padding-bottom: 0;
             }
 
             .message {
                 margin-bottom: 14px;
                 padding-left: 12px;
+                page-break-inside: avoid;
             }
 
             .message-role {
-                font-size: 9px;
+                font-size: 8px;
                 font-weight: bold;
                 text-transform: uppercase;
                 letter-spacing: .08em;
                 margin-bottom: 3px;
-                color: #aaa;
+                color: #6b8299;
             }
 
             .message.user .message-role {
@@ -95,17 +108,16 @@
             }
 
             .message-bubble {
-                background: #f7f9fb;
-                border-left: 2px solid #e0e7ef;
-                border-radius: 0 6px 6px 0;
-                padding: 8px 12px;
-                line-height: 1.65;
+                background: #ffffff;
+                border-left: 3px solid #e8eef3;
+                padding: 6px 0 6px 12px;
+                line-height: 1.6;
                 color: #3d5166;
             }
 
             .message.user .message-bubble {
-                background: #f0f9f8;
-                border-left-color: #0f7c6e;
+                background: #ffffff;
+                border-left: 3px solid #0f7c6e;
                 color: #0d1f2d;
             }
 
@@ -113,112 +125,23 @@
                 margin-bottom: 12px;
             }
 
-            .breakdown-top {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 4px;
-            }
-
-            .breakdown-name {
-                font-size: 10px;
-                font-weight: bold;
-                color: #3d5166;
-            }
-
-            .breakdown-score {
-                font-size: 10px;
-                font-weight: bold;
-                color: #0f7c6e;
-            }
-
-            .bar-track {
-                height: 7px;
-                background: #d0eeeb;
-                border-radius: 4px;
-                overflow: hidden;
-            }
-
-            .bar-fill {
-                height: 7px;
-                background: #0f7c6e;
-            }
-
             .feedback-box {
-                background: #f0f9f8;
-                border: 1px solid #d0eeeb;
-                border-radius: 8px;
-                padding: 16px 18px;
+                background: #ffffff;
+                border: 1px solid #0f7c6e;
+                border-radius: 6px;
+                padding: 14px 16px;
             }
 
             .feedback-text {
-                line-height: 1.7;
-                color: #0d4a42;
+                line-height: 1.6;
+                color: #3d5166;
                 font-size: 11px;
-            }
-
-            .footer {
-                margin-top: 36px;
-                padding-top: 14px;
-                border-top: 1px solid #e8eef3;
-                display: flex;
-                justify-content: space-between;
-                font-size: 9px;
-                color: #6b8299;
             }
 
             .divider {
                 height: 1px;
                 background: #e8eef3;
                 margin: 20px 0;
-            }
-
-            /* Pulse animation for low score ring */
-            @keyframes pulse {
-                0% {
-                    opacity: 0.3;
-                    transform: scale(1);
-                }
-
-                50% {
-                    opacity: 0.8;
-                    transform: scale(1.05);
-                }
-
-                100% {
-                    opacity: 0.3;
-                    transform: scale(1);
-                }
-            }
-
-            .pulse-ring {
-                animation: pulse 2s ease-in-out infinite;
-            }
-
-            /* Warning badge for low scores */
-            .score-warning {
-                display: inline-block;
-                background: #d9534f;
-                color: white;
-                font-size: 8px;
-                font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: .06em;
-                padding: 2px 8px;
-                border-radius: 99px;
-                margin-left: 8px;
-            }
-
-            /* Low score text color */
-            .text-low {
-                color: #d9534f !important;
-            }
-
-            .bg-low {
-                background: #fdf0ed !important;
-            }
-
-            .border-low {
-                border-color: #f5c6c2 !important;
             }
         </style>
     </head>
@@ -238,19 +161,12 @@
         {{-- Score hero --}}
         @if ($scores)
             @php
-                // Get the final score - this will be 30 in your case
-                $finalScore = (int) $scores['final'];
+                // FORCE convert to integer and handle edge cases
+                $finalScore = intval($scores['final']);
 
                 // Check if it's a low score (below 40)
 $isLowScore = $finalScore < 40;
-
-// Set colors based on score
-$scoreColor = $isLowScore ? '#d9534f' : '#0f7c6e';
-$innerFill = $isLowScore ? '#fde8e8' : '#e6f5f3';
-$outerStroke = $isLowScore ? '#d9534f' : '#0f7c6e';
-$headerBg = $isLowScore ? '#fdf0ed' : '#f0f9f8';
-$borderColor = $isLowScore ? '#f5c6c2' : '#d0eeeb';
-$labelColor = $isLowScore ? '#d9534f' : '#14a896';
+$accentColor = $isLowScore ? '#d9534f' : '#0f7c6e';
 
 // Performance label
 $performanceLabel =
@@ -258,73 +174,59 @@ $performanceLabel =
             @endphp
 
             <table
-                style="width:100%;background:{{ $headerBg }};border-bottom:2px solid {{ $borderColor }};border-collapse:collapse;">
+                style="width: 100%; border: 1px solid {{ $isLowScore ? '#f5c6c2' : '#d0eeeb' }}; border-collapse: collapse; margin-bottom: 20px; background-color: #ffffff;">
                 <tr>
-                    <td style="padding:24px 0 24px 40px;width:90px;vertical-align:middle;">
-
-                        <svg width="76" height="76" viewBox="0 0 76 76" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Outer ring -->
-                            <circle cx="38" cy="38" r="35" fill="#ffffff" stroke="{{ $outerStroke }}"
-                                stroke-width="3.5" />
-
-                            <!-- Inner fill -->
-                            <circle cx="38" cy="38" r="31" fill="{{ $innerFill }}" stroke="none" />
-
-                            <!-- Pulse ring for low scores -->
-                            @if ($isLowScore)
-                                <circle cx="38" cy="38" r="35" fill="none" stroke="#d9534f"
-                                    stroke-width="1.5" stroke-dasharray="8 4" class="pulse-ring" />
-                            @endif
-
-                            <!-- Score text - THIS IS WHERE 30 APPEARS -->
-                            <text x="38" y="38" dy="8" text-anchor="middle"
-                                font-family="DejaVu Sans, sans-serif" font-size="24" font-weight="bold"
-                                fill="{{ $scoreColor }}">{{ $finalScore }}</text>
-
-                            <!-- Exclamation mark for low scores -->
-                            @if ($isLowScore)
-                                <text x="52" y="28" dy="0" text-anchor="middle"
-                                    font-family="DejaVu Sans, sans-serif" font-size="12" font-weight="bold"
-                                    fill="#d9534f">!</text>
-                            @endif
-                        </svg>
+                    <td style="padding: 20px 0 20px 40px; width: 80px; vertical-align: middle;">
+                        <table
+                            style="border: 2px solid {{ $accentColor }}; border-collapse: collapse; background-color: #ffffff; width: 70px; height: 70px; text-align: center;">
+                            <tr>
+                                <td
+                                    style="vertical-align: middle; text-align: center; font-size: 28px; font-weight: bold; color: {{ $accentColor }}; height: 70px; padding: 0;">
+                                    {{ $finalScore }}
+                                </td>
+                            </tr>
+                        </table>
                     </td>
-                    <td style="padding:24px 40px 24px 12px;vertical-align:middle;">
+                    <td style="padding: 20px 24px 20px 16px; vertical-align: middle;">
                         <div
-                            style="font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:.1em;color:{{ $labelColor }};margin-bottom:4px;">
+                            style="font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .1em; color: {{ $accentColor }}; margin-bottom: 4px;">
                             Overall Performance
                             @if ($isLowScore)
-                                <span class="score-warning">Needs Improvement</span>
+                                <span
+                                    style="color: #d9534f; margin-left: 8px; font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: .06em;">(Needs
+                                    Improvement)</span>
                             @endif
                         </div>
-                        <div style="font-size:16px;font-weight:bold;color:#0d1f2d;margin-bottom:12px;">
+                        <div style="font-size: 16px; font-weight: bold; color: #0d1f2d; margin-bottom: 12px;">
                             {{ $performanceLabel }}
                             @if ($isLowScore)
-                                <span style="font-size:12px;font-weight:normal;color:#d9534f;margin-left:8px;">⚠️ Below
-                                    target</span>
+                                <span style="font-size: 12px; font-weight: normal; color: #d9534f; margin-left: 8px;">⚠️
+                                    Below target</span>
                             @endif
                         </div>
-                        <table style="border-collapse:collapse;">
+                        <table style="border-collapse: collapse;">
                             <tr>
                                 @foreach (['clarity' => 'Clarity', 'confidence' => 'Confidence', 'objective' => 'Objective', 'adaptability' => 'Adaptability'] as $key => $label)
                                     @php
-                                        $subScore = (int) ($scores[$key] ?? 0);
+                                        $subScore = intval($scores[$key] ?? 0);
                                         $isSubLow = $subScore < 40;
                                         $subColor = $isSubLow ? '#d9534f' : '#0f7c6e';
                                     @endphp
-                                    <td style="text-align:center;padding-right:20px;">
-                                        <div style="font-size:14px;font-weight:bold;color:{{ $subColor }};">
-                                            {{ $subScore }}</div>
+                                    <td style="text-align: center; padding-right: 20px; padding-bottom: 4px;">
+                                        <div style="font-size: 14px; font-weight: bold; color: {{ $subColor }};">
+                                            {{ $subScore }}
+                                        </div>
                                         <div
-                                            style="font-size:9px;color:#6b8299;text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">
-                                            {{ $label }}</div>
+                                            style="font-size: 9px; color: #6b8299; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px;">
+                                            {{ $label }}
+                                        </div>
                                     </td>
                                 @endforeach
                             </tr>
                         </table>
                         @if (!empty($scores['completion_rate']) && $scores['completion_rate'] < 100)
                             <div
-                                style="display:inline-block;margin-top:10px;background:#d0eeeb;color:#0f7c6e;font-size:9px;font-weight:bold;text-transform:uppercase;letter-spacing:.06em;padding:3px 10px;border-radius:99px;">
+                                style="margin-top: 10px; color: {{ $isLowScore ? '#d9534f' : '#0f7c6e' }}; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .06em;">
                                 {{ $scores['completion_rate'] }}% session completed
                             </div>
                         @endif
@@ -334,49 +236,75 @@ $performanceLabel =
         @endif
 
         <div class="body">
+            @php $firstSection = true; @endphp
 
             @if ($scores)
-                <div class="section-header">
-                    <div class="section-dot"></div>
-                    <div class="section-title">Performance Breakdown</div>
-                </div>
+                {{-- Performance Breakdown --}}
+                <table class="section-header-table" style="margin-top: {{ $firstSection ? '0' : '28px' }};">
+                    <tr>
+                        <td class="section-bar">&nbsp;</td>
+                        <td class="section-title">Performance Breakdown</td>
+                    </tr>
+                </table>
+                @php $firstSection = false; @endphp
+
                 @foreach (['clarity' => 'Clarity', 'confidence' => 'Confidence', 'objective' => 'Objective', 'adaptability' => 'Adaptability'] as $key => $label)
                     @php
-                        $subScore = (int) ($scores[$key] ?? 0);
+                        $subScore = intval($scores[$key] ?? 0);
                         $isSubLow = $subScore < 40;
                         $barColor = $isSubLow ? '#d9534f' : '#0f7c6e';
                         $scoreColor = $isSubLow ? '#d9534f' : '#0f7c6e';
                     @endphp
                     <div class="breakdown-row">
-                        <div class="breakdown-top">
-                            <span class="breakdown-name">
-                                {{ $label }}
-                                @if ($isSubLow)
-                                    <span style="color:#d9534f;font-size:8px;margin-left:4px;">⚠️</span>
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 4px;">
+                            <tr>
+                                <td style="font-size: 10px; font-weight: bold; color: #3d5166; padding: 0;">
+                                    {{ $label }}
+                                    @if ($isSubLow)
+                                        <span style="color:#d9534f;font-size:8px;margin-left:4px;">⚠️</span>
+                                    @endif
+                                </td>
+                                <td
+                                    style="text-align: right; font-size: 10px; font-weight: bold; color: {{ $scoreColor }}; padding: 0;">
+                                    {{ $subScore }}/100
+                                </td>
+                            </tr>
+                        </table>
+                        <table
+                            style="width: 100%; height: 7px; border-collapse: collapse; background-color: #e8eef3; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                            <tr>
+                                @if ($subScore > 0)
+                                    <td
+                                        style="width: {{ $subScore }}%; background-color: {{ $barColor }}; height: 7px; padding: 0;">
+                                    </td>
                                 @endif
-                            </span>
-                            <span class="breakdown-score"
-                                style="color:{{ $scoreColor }};">{{ $subScore }}/100</span>
-                        </div>
-                        <div class="bar-track">
-                            <div class="bar-fill" style="width:{{ $subScore }}%;background:{{ $barColor }};">
-                            </div>
-                        </div>
+                                @if ($subScore < 100)
+                                    <td
+                                        style="width: {{ 100 - $subScore }}%; background-color: #e8eef3; height: 7px; padding: 0;">
+                                    </td>
+                                @endif
+                            </tr>
+                        </table>
                     </div>
                 @endforeach
 
                 <div class="divider"></div>
 
+                {{-- Coach Feedback --}}
                 @if (!empty($scores['feedback']))
-                    <div class="section-header">
-                        <div class="section-dot"></div>
-                        <div class="section-title">Coach Feedback</div>
-                    </div>
-                    <div class="feedback-box"
-                        style="{{ $isLowScore ? 'border-color:#f5c6c2;background:#fdf0ed;' : '' }}">
+                    <table class="section-header-table" style="margin-top: {{ $firstSection ? '0' : '28px' }};">
+                        <tr>
+                            <td class="section-bar">&nbsp;</td>
+                            <td class="section-title">Coach Feedback</td>
+                        </tr>
+                    </table>
+                    @php $firstSection = false; @endphp
+
+                    <div class="feedback-box" style="border-color: {{ $isLowScore ? '#d9534f' : '#0f7c6e' }};">
                         <p class="feedback-text">{{ $scores['feedback'] }}</p>
                         @if ($isLowScore)
-                            <p style="margin-top:8px;color:#d9534f;font-weight:bold;font-size:10px;">
+                            <p
+                                style="margin-top: 8px; color: #d9534f; font-weight: bold; font-size: 10px; margin-bottom: 0;">
                                 💡 Recommendation: Consider reviewing the fundamentals and practicing with our guided
                                 modules.
                             </p>
@@ -386,10 +314,14 @@ $performanceLabel =
                 @endif
             @endif
 
-            <div class="section-header">
-                <div class="section-dot"></div>
-                <div class="section-title">Conversation Transcript</div>
-            </div>
+            {{-- Conversation Transcript --}}
+            <table class="section-header-table" style="margin-top: {{ $firstSection ? '0' : '28px' }};">
+                <tr>
+                    <td class="section-bar">&nbsp;</td>
+                    <td class="section-title">Conversation Transcript</td>
+                </tr>
+            </table>
+            @php $firstSection = false; @endphp
 
             @foreach ($messages as $msg)
                 @if ($msg->role !== 'system')
@@ -400,10 +332,18 @@ $performanceLabel =
                 @endif
             @endforeach
 
-            <div class="footer">
-                <span>{{ $scenario->title }} · Session #{{ $conversation->id }}</span>
-                <span>Rehearse AI Coach · Generated {{ now()->format('F j, Y') }}</span>
-            </div>
+            {{-- Footer --}}
+            <table
+                style="width: 100%; border-collapse: collapse; margin-top: 36px; border-top: 1px solid #e8eef3; font-size: 9px; color: #6b8299;">
+                <tr>
+                    <td style="padding-top: 14px; text-align: left;">
+                        {{ $scenario->title }} · Session #{{ $conversation->id }}
+                    </td>
+                    <td style="padding-top: 14px; text-align: right;">
+                        Rehearse AI Coach · Generated {{ now()->format('F j, Y') }}
+                    </td>
+                </tr>
+            </table>
 
         </div>
     </body>
